@@ -178,7 +178,7 @@ def analyze_resume(resume_text, job_desc):
     return data
 
 # Page Config must be the first Streamlit command
-st.set_page_config(page_title="DevLabs AI Resume Screening", page_icon="https://media.licdn.com/dms/image/v2/D4D0BAQGgmm3eOlAjXg/company-logo_200_200/company-logo_200_200/0/1694777298283/devlabsalliance_logo?e=2147483647&v=beta&t=htaMe525FbPL787VFd54WUM1flrpsrEs2DMa3ym00qs", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Xylotk Resume Screening", page_icon="📝", layout="wide", initial_sidebar_state="collapsed")
 
 def load_css():
     st.markdown("""
@@ -711,9 +711,8 @@ if 'screening_complete' not in st.session_state:
 st.markdown("""
     <div class="app-header">
         <div class="logo">
-            <span class="logo-icon"></span>
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRxvcmVB85wmTZ1kLG2nK8KQXPnihQDzpEtXw&s" alt="DevLabs AI Logo" style="width: 50px; height: 50px; margin-right:10px">
-            <span>DevLabs AI Resume Screening</span>
+            <span class="logo-icon">✨</span>
+            <span>Xylotk Resume Screening</span>
         </div>
         <div style="display: flex; gap: 16px; align-items: center;">
             <span style="font-size: 0.9rem; color: #6b7280;">Screen candidates intelligently with AI</span>
