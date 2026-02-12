@@ -68,6 +68,8 @@ def analyze_resume(resume_text, job_desc):
     if api_key:
         client = Groq(api_key=api_key)
     
+    error_message = None
+    
     # Analyze resume
     if client:
         try:
@@ -83,7 +85,8 @@ def analyze_resume(resume_text, job_desc):
             )
             content = response.choices[0].message.content
         except Exception as e:
-            st.error(f"API Error: {str(e)}")
+            error_message = str(e)
+            st.error(f"API Error: {error_message}")
             content = "{}" # Fallback to empty JSON string to allow defaults to be set
     else:
         # Fallback to local Ollama if no API key
@@ -102,7 +105,8 @@ def analyze_resume(resume_text, job_desc):
             )
             content = response['message']['content']
         except Exception as e:
-             st.error(f"Ollama Error (Is it running?): {str(e)}")
+             error_message = str(e)
+             st.error(f"Ollama Error (Is it running?): {error_message}")
              content = "{}"
     
     # specific cleanup for markdown code blocks which some models include
@@ -133,7 +137,12 @@ def analyze_resume(resume_text, job_desc):
     data.setdefault('experience_years', 0)
     data.setdefault('skills_match_score', 50)
     data.setdefault('education_score', 50)
-    data.setdefault('summary', 'Unable to generate summary')
+    
+    default_summary = 'Unable to generate summary'
+    if error_message:
+        default_summary = f"⚠️ Analysis Failed: {error_message}"
+    
+    data.setdefault('summary', default_summary)
     
     # PASS 2: Force detailed summary generation if missing or too short
     # This solves the issue where the single-pass JSON generation truncates the summary
