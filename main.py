@@ -5,6 +5,11 @@ import ollama
 import json
 import streamlit as st
 import pandas as pd
+import os
+from groq import Groq
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Database Setup
 def init_db():
@@ -48,22 +53,53 @@ def analyze_resume(resume_text, job_desc):
     Ensure the output is valid JSON.
     """
 
-    response = ollama.chat(
-        model='gemma3:4b',
-        messages=[
-            {'role': 'system', 'content': system_prompt},
-            {'role': 'user', 'content': user_prompt}
-        ],
-        # format='json',  # Removed to avoid strict schema constraints which can cause empty outputs
-        options={
-            'temperature': 0.2,  # Slightly higher temp for creativity in summary
-            'num_ctx': 8192,     # Increased context window to 8192 tokens to prevent truncation
-            'num_predict': 512   # Allow more tokens for a detailed summary
-        }
-    )
+    # API Client Setup
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        # Check Streamlit secrets for cloud deployment
+        if "GROQ_API_KEY" in st.secrets:
+            api_key = st.secrets["GROQ_API_KEY"]
+            
+    client = None
+    if api_key:
+        client = Groq(api_key=api_key)
     
-    # Ollama returns a dictionary; extract the content string and parse it
-    content = response['message']['content']
+    # Analyze resume
+    if client:
+        try:
+            response = client.chat.completions.create(
+                messages=[
+                    {'role': 'system', 'content': system_prompt},
+                    {'role': 'user', 'content': user_prompt}
+                ],
+                model="gemma2-9b-it", # Using Groq's available Gemma model
+                temperature=0.2,
+                max_tokens=1024,
+                response_format={"type": "json_object"}
+            )
+            content = response.choices[0].message.content
+        except Exception as e:
+            st.error(f"API Error: {str(e)}")
+            return {}
+    else:
+        # Fallback to local Ollama if no API key
+        try:
+            response = ollama.chat(
+                model='gemma3:4b',
+                messages=[
+                    {'role': 'system', 'content': system_prompt},
+                    {'role': 'user', 'content': user_prompt}
+                ],
+                options={
+                    'temperature': 0.2,
+                    'num_ctx': 8192,
+                    'num_predict': 512
+                }
+            )
+            content = response['message']['content']
+        except Exception as e:
+             st.error(f"Ollama Error (Is it running?): {str(e)}")
+             return {}
     
     # specific cleanup for markdown code blocks which some models include
     if "```json" in content:
@@ -105,12 +141,22 @@ def analyze_resume(resume_text, job_desc):
         Write a detailed professional summary (4-6 sentences) of the candidate's profile, highlighting their key skills, experience, and suitability for the role. Focus on actionable insights for a recruiter. Do not include any introductory text, just the summary.
         """
         try:
-            summary_response = ollama.chat(
-                model='gemma3:4b',
-                messages=[{'role': 'user', 'content': summary_prompt}],
-                options={'temperature': 0.4, 'num_ctx': 8192, 'num_predict': 512}
-            )
-            new_summary = summary_response['message']['content'].strip()
+            if client:
+                 summary_response = client.chat.completions.create(
+                    messages=[{'role': 'user', 'content': summary_prompt}],
+                    model="gemma2-9b-it",
+                    temperature=0.4,
+                    max_tokens=512
+                )
+                 new_summary = summary_response.choices[0].message.content.strip()
+            else:
+                summary_response = ollama.chat(
+                    model='gemma3:4b',
+                    messages=[{'role': 'user', 'content': summary_prompt}],
+                    options={'temperature': 0.4, 'num_ctx': 8192, 'num_predict': 512}
+                )
+                new_summary = summary_response['message']['content'].strip()
+            
             if new_summary:
                 data['summary'] = new_summary
         except Exception:

@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.env
+.venv
+recruiter.db
+.DS_Store
