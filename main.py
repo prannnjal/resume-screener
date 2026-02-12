@@ -78,7 +78,7 @@ def analyze_resume(resume_text, job_desc):
                     {'role': 'system', 'content': system_prompt},
                     {'role': 'user', 'content': user_prompt}
                 ],
-                model="llama3-70b-8192", # Switched to stable Llama 3 model
+                model="llama-3.3-70b-versatile", # Updated to Llama 3.3
                 temperature=0.2,
                 max_tokens=1024,
                 response_format={"type": "json_object"}
@@ -157,7 +157,7 @@ def analyze_resume(resume_text, job_desc):
             if client:
                  summary_response = client.chat.completions.create(
                     messages=[{'role': 'user', 'content': summary_prompt}],
-                    model="llama3-70b-8192",
+                    model="llama-3.3-70b-versatile",
                     temperature=0.4,
                     max_tokens=512
                 )
