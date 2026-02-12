@@ -72,7 +72,7 @@ def analyze_resume(resume_text, job_desc):
                     {'role': 'system', 'content': system_prompt},
                     {'role': 'user', 'content': user_prompt}
                 ],
-                model="gemma2-9b-it", # Using Groq's available Gemma model
+                model="llama3-70b-8192", # Switched to stable Llama 3 model
                 temperature=0.2,
                 max_tokens=1024,
                 response_format={"type": "json_object"}
@@ -80,13 +80,13 @@ def analyze_resume(resume_text, job_desc):
             content = response.choices[0].message.content
         except Exception as e:
             st.error(f"API Error: {str(e)}")
-            return {}
+            content = "{}" # Fallback to empty JSON string to allow defaults to be set
     else:
         # Fallback to local Ollama if no API key
         try:
             response = ollama.chat(
                 model='gemma3:4b',
-                messages=[
+                messages=[ 
                     {'role': 'system', 'content': system_prompt},
                     {'role': 'user', 'content': user_prompt}
                 ],
@@ -99,7 +99,7 @@ def analyze_resume(resume_text, job_desc):
             content = response['message']['content']
         except Exception as e:
              st.error(f"Ollama Error (Is it running?): {str(e)}")
-             return {}
+             content = "{}"
     
     # specific cleanup for markdown code blocks which some models include
     if "```json" in content:
@@ -117,10 +117,10 @@ def analyze_resume(resume_text, job_desc):
             try:
                 data = json.loads(match.group(0))
             except json.JSONDecodeError:
-                st.error(f"Failed to parse JSON. Raw output:\n{content}")
+                # st.error(f"Failed to parse JSON. Raw output:\n{content}") # Muted to reduce noise
                 data = {}
         else:
-            st.error(f"No JSON found in response. Raw output:\n{content}")
+            # st.error(f"No JSON found in response. Raw output:\n{content}")
             data = {}
     
     # Ensure all required keys exist with default values
@@ -144,7 +144,7 @@ def analyze_resume(resume_text, job_desc):
             if client:
                  summary_response = client.chat.completions.create(
                     messages=[{'role': 'user', 'content': summary_prompt}],
-                    model="gemma2-9b-it",
+                    model="llama3-70b-8192",
                     temperature=0.4,
                     max_tokens=512
                 )
