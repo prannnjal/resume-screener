@@ -55,10 +55,14 @@ def analyze_resume(resume_text, job_desc):
 
     # API Client Setup
     api_key = os.getenv("GROQ_API_KEY")
-    if not api_key:
-        # Check Streamlit secrets for cloud deployment
+    try:
         if "GROQ_API_KEY" in st.secrets:
             api_key = st.secrets["GROQ_API_KEY"]
+    except FileNotFoundError:
+        pass # Not running in Streamlit Cloud or no secrets file
+
+    if not api_key:
+        st.error("⚠️ GROQ_API_KEY is missing! If running on Streamlit Cloud, add it to 'Advanced Settings' -> 'Secrets'.")
             
     client = None
     if api_key:
