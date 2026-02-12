@@ -733,6 +733,29 @@ with col_sidebar:
         st.session_state.creating_new_job = True
         st.session_state.selected_job_id = None
     
+    # Reset Database Button (at bottom)
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    if st.button("⚠️ Reset Database", type="secondary", use_container_width=True, help="⚠️ This will delete all jobs and resumes!"):
+        try:
+            conn.close() # Ensure connection is closed before meaningful deletion
+        except:
+            pass
+            
+        import time
+        
+        # Close any existing connections by force if needed (sqlite3 logic handles file locks)
+        
+        if os.path.exists('recruiter.db'):
+            try:
+                os.remove('recruiter.db')
+                st.session_state.selected_job_id = None
+                st.session_state.creating_new_job = False
+                st.success("Database reset successfully!")
+                time.sleep(1)
+                st.rerun()
+            except Exception as e:
+                st.error(f"Error resetting DB: {e}")
+    
     st.markdown("<hr style='margin: 12px 0; border-color: #e5e7eb;'>", unsafe_allow_html=True)
     
     # Fetch all jobs
